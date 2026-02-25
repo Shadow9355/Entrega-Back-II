@@ -4,6 +4,6 @@ const router = express.Router();
 import userRouter from "./userRouter.js";
 
 
-router.use("/api/user", userRouter);
+router.use("/api/sessions", userRouter);
 
 export default router;

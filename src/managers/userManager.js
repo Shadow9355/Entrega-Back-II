@@ -1,57 +1,95 @@
 import User from "../models/userModel.js";
+import { createHash, isValidPassword } from "../utils/crypto.js";
+import { CustomError } from "../core/errors/CustomError.js";
+
 
 class UserManager{
     contructor() {}
 
+    // Obtener usuarios
     async getUsers() {
-        try {
-            const users = await User.find();
-            return users;
-
-        } catch (error) {
-            console.log("No se encontraron usuarios", error);
-        }
+        const users = await User.find();
+        return users;
     }
 
+    // Obtener un usuario por id
     async getUserById(id) {
-        try {
-            const user = await User.findById(id);
-            return user;
-
-        } catch (error) {
-            console.log("Usuario no encontrado", error);
-        }
+        const user = await User.findById(id);
+        return user;
     }
 
-    async createUser(newUser) {
-        try {
-            const user = User.create(newUser);
-            return user;
+    // Crear nuevo usuario y registrarlo
+    async createUser({first_name, last_name, email, age, password, cart, role}) {
 
-        } catch (error) {
-            console.log("No se pudo crear el usuario", error);
+        // validaciones de campos
+        if(!first_name || !last_name || !email || !age || !password){
+            throw new CustomError("Campos incompletos", 400);
         }
+
+        // hasheo de contraseña
+        const hashed = await createHash(password)    
+
+        // validacion de existencia de email previa
+        const exists = await User.findOne({ email });
+        if (exists) {
+            throw new CustomError("Error el usuario ya existe", 400);
+        }
+
+        // Creamos el usuario
+        const user = await User.create({first_name, last_name, email, age, password: hashed, cart, role});
+
+        return user;
     }
 
+    // Loguear un usuario ya registrado
+    async loginUser({email, password}) {
+
+        // validacion de campos
+        if(!email || !password){
+            throw new CustomError("Campos incompletos", 400);
+        }
+        
+        // validacion de existencia de email previa
+        const user = await User.findOne({ email });
+        if(!user){
+            throw new CustomError("El email es invalido", 401)
+        }
+        
+        // validacion de contraseña
+        const ok = await isValidPassword(password, user.password);
+        if(!ok){
+            throw new CustomError("La contraseña es invalida", 401)
+        }
+        
+        return user;
+    }
+
+    // Actualizar un usuario
     async updateUser(id, updateData) {
-        try {
-            const update = await User.findByIdAndUpdate(id, updateData, { new: true });
-            return update;
-
-        } catch (error) {
-            console.log("No se pudo actualizar el usuario", error);
-        }
+        const update = await User.findByIdAndUpdate(id, updateData, { new: true });
+        return update;
     }
 
+    // Eliminar un usuario
     async deleteUser(id) {
-        try {
-            const deleteUser = await User.findByIdAndDelete(id);
-            return deleteUser;
+        const deleteUser = await User.findByIdAndDelete(id);
+        return deleteUser;
+    }
 
-        } catch (error) {
-            console.log("No se pudo eliminar el usuario", error);
+    // Restaurar contraseña
+    async restaurarPassword(email, password) {
+        const user = await User.findOne({email});
+
+        if(!user){
+            throw new CustomError("Usuario invalido", 401);
         }
+
+        user.password = await createHash(password);
+
+        const result = await User.updateOne(user);
+        return result;
     }
 }
+
 
 export default UserManager;

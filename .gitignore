@@ -1,3 +1,5 @@
 node_modules
 .env
 package-lock.json
+passport.cookie.js
+app.copy.js
