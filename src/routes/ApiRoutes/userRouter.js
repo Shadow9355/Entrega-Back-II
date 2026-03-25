@@ -1,6 +1,9 @@
 import { Router } from "express";
 const router = Router();
 
+// Politicas de autorizacion
+import { handlePolices } from "../../core/middlewares/polices.js";
+
 // Passport.config
 import { passportCall } from "../../core/middlewares/utils.js";
 import jwt from "jsonwebtoken";
@@ -11,7 +14,7 @@ const userManager = new UserManager();
 
 
 // Mostrar todos los usuarios
-router.get("/", async(req,res) => {
+router.get("/", handlePolices(["PUBLIC"]), async(req,res) => {
     try {
         const users = await userManager.getUsers();
         res.status(200).json(users);
@@ -36,7 +39,7 @@ router.get("/current", passportCall("jwt", {session: false}), (req,res) => {
 });
 
 // Mostrar un usuario por su id
-router.get("/:id", async(req,res) => {
+router.get("/:id", handlePolices(["PUBLIC"]), async(req,res) => {
     try {
         const id = req.params.id;
         const findUser = await userManager.getUserById(id);

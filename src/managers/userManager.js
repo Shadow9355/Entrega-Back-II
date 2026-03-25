@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import { createHash, isValidPassword } from "../utils/crypto.js";
+import { createHash, isValidPassword } from "../core/utils/crypto.js";
 import { CustomError } from "../core/errors/CustomError.js";
 
 
@@ -27,7 +27,7 @@ class UserManager{
         }
 
         // hasheo de contraseña
-        const hashed = await createHash(password)    
+        const hashed = createHash(password)    
 
         // validacion de existencia de email previa
         const exists = await User.findOne({ email });
@@ -56,7 +56,7 @@ class UserManager{
         }
         
         // validacion de contraseña
-        const ok = await isValidPassword(password, user.password);
+        const ok = isValidPassword(password, user.password);
         if(!ok){
             throw new CustomError("La contraseña es invalida", 401)
         }
