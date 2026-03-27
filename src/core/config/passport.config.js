@@ -1,5 +1,4 @@
 import passport from "passport";
-import {Strategy as LocalStrategy} from "passport-local";
 import jwt from "passport-jwt";
 
 import dotenv from "dotenv";
@@ -8,48 +7,13 @@ dotenv.config();
 const JWTStrategy = jwt.Strategy;
 const ExtractJWT = jwt.ExtractJwt;
 
-// Manager: contiene la logica
+// Manager: contiene la logica   ==== cambiar por service
 import UserManager from "../../managers/userManager.js";
 const userManager = new UserManager();
 
 
 
 const initializePassport = () => {
-
-    ////////////////////////////////////
-    /// CONFIGURACION CON LOCAL STRATEGY
-    ////////////////////////////////////
-    
-
-    // Llama al manager para crear y registrar usuarios
-    passport.use("register", new LocalStrategy(
-        { usernameField: "email", passReqToCallback: true }, 
-        async(req, username, password, done) => {
-            try {
-                const {first_name, last_name, age, cart, role} = req.body;
-                const user = await userManager.createUser({first_name, last_name, email: username, age, password, cart, role});
-                return done(null, user);
-    
-            } catch (error) {
-                return done(null, false, { message: error.message, status: error.statusCode || 500});
-            }
-        }
-    ));
-    
-    // Maneja autenticacion para loguear usuarios.
-    passport.use("login", new LocalStrategy(
-        {usernameField: "email"},
-        async (username, password, done) => {
-            try {
-                const user = await userManager.loginUser({email: username, password});
-                return done(null, user);
-    
-            } catch (error) {
-                return done(null, false, { message: error.message, status: error.statusCode || 500 });
-            }
-        }
-    ));
-
 
     /////////////////////////
     /// CONFIGURACION CON JWT

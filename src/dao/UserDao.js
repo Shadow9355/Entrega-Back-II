@@ -22,8 +22,8 @@ class UserDao {
     }
 
     // Crear nuevo usuario
-    async createUser(userData) {
-        const user = await User.create(userData);
+    async createUser({first_name, last_name, email, age, password: hashed, cart, role}) {
+        const user = await User.create({first_name, last_name, email, age, password: hashed, cart, role});
         return user;
     }
 

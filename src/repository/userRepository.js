@@ -21,8 +21,8 @@ class UserRepository {
     }
 
     // Crear nuevo usuario
-    async createUser(userData) {
-        return await this.userDao.createUser(userData);
+    async createUser({first_name, last_name, email, age, password: hashed, cart, role}) {
+        return await this.userDao.createUser({first_name, last_name, email, age, password: hashed, cart, role});
     }
 
     // Actualizar un usuario
