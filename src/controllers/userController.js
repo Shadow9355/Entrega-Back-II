@@ -75,7 +75,7 @@ class UserController {
             // crear un carrito para el usuario
             const cart = await this.CartRepository.createCart();
 
-            const user = await this.UserService.userCreate({first_name, last_name, email, age, password, role, cart}); 
+            const user = await this.UserService.userCreate({first_name, last_name, email, age, password, role, cart: cart._id}); 
             
             return res.status(201).json({
                 message: "Usuario registrado con éxito",

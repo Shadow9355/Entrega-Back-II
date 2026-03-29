@@ -50,7 +50,7 @@ class CartController {
             const cartId = req.user.cart;
             const productId = req.params.productId;
             const updatedCart = await this.cartService.addProduct(cartId, productId);
-            console.log(req.user)
+            
             res.json(updatedCart);
 
         } catch (error) {

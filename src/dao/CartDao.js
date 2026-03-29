@@ -5,7 +5,7 @@ class CartDao {
 
     // Obtener carritos (y mostrar su contenido)
     async getCarts() {
-        const carts = await Cart.find().populate("products.product");
+        const carts = await Cart.find();
         return carts;
     }
 
@@ -23,11 +23,7 @@ class CartDao {
 
     // Agregar un producto al carrito
     async addProduct(cartId, productId) {
-        const cart = await Cart.findByIdAndUpdate(
-            cartId,
-            { $push: { products: productId } },
-            { new: true }
-        );
+        const cart = await Cart.findByIdAndUpdate(cartId, productId, { new: true });
         return cart;
     }
 
