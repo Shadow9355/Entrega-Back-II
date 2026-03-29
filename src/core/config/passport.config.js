@@ -7,9 +7,9 @@ dotenv.config();
 const JWTStrategy = jwt.Strategy;
 const ExtractJWT = jwt.ExtractJwt;
 
-// Manager: contiene la logica   ==== cambiar por service
-import UserManager from "../../managers/userManager.js";
-const userManager = new UserManager();
+
+import UserRepository from "../../repository/userRepository.js";
+const userRepository = new UserRepository();
 
 
 
@@ -39,7 +39,7 @@ const initializePassport = () => {
         }, 
         async (jwt_payload, done) => {
             try {
-                const user = await userManager.getUserById(jwt_payload.id);
+                const user = await userRepository.getUserById(jwt_payload.id);
                 
                 if (!user) {
                     return done(null, false);

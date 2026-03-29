@@ -1,10 +1,12 @@
 import CartService from "../services/cartService.js";
 import CartRepository from "../repository/cartRepository.js";
+import TicketService from "../services/ticketService.js";
 
 class CartController {
     constructor() {
         this.cartService = new CartService();
         this.cartRepository = new CartRepository();
+        this.ticketService = new TicketService();
     }
 
     // Obtener los carritos
@@ -78,7 +80,29 @@ class CartController {
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
         }
-        };
+        
+    };
+
+
+    // Comprar los productos del carrito
+    purchaseCart = async (req, res) => {
+        try {
+
+            const cartId = req.user.cart;
+            const userEmail = req.user.email;
+    
+            const result = await this.ticketService.purchase(cartId, userEmail);
+    
+            res.status(200).json({
+                message: "Compra procesada con exito",
+                ticket: result.ticket,
+                productos_no_procesados: result.notProcessedProducts
+            });
+
+        } catch (error) {
+            res.status(error.statusCode || 500).json({error: error.message});
+        }
+    };
 
 }
 

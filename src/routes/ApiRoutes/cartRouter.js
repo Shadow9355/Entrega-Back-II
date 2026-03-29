@@ -28,6 +28,13 @@ router.post("/product/:id",
     cartController.addProduct);
 
 
+// Comprar los productos del carrito y generar un ticket
+router.post("/purchase",
+    passportCall("jwt", { session: false }),
+    authorize(["user"]),
+    cartController.purchaseCart);
+
+
 // Actualizar un carrito
 router.put("/:id", cartController.updateCart);
 
