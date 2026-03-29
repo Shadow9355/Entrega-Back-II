@@ -11,7 +11,7 @@ class UserDao {
 
     // Obtener un usuario por id
     async getUserById(id) {
-        const user = await User.findById(id);
+        const user = await User.findById(id).populate("cart");
         return user;
     }
 
@@ -22,8 +22,8 @@ class UserDao {
     }
 
     // Crear nuevo usuario
-    async createUser({first_name, last_name, email, age, password: hashed, cart, role}) {
-        const user = await User.create({first_name, last_name, email, age, password: hashed, cart, role});
+    async createUser({first_name, last_name, email, age, password: hashed, role, cart}) {
+        const user = await User.create({first_name, last_name, email, age, password: hashed, role, cart});
         return user;
     }
 

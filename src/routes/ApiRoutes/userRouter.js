@@ -1,124 +1,44 @@
 import { Router } from "express";
 const router = Router();
 
-// Politicas de autorizacion
-import { handlePolices } from "../../core/middlewares/polices.js";
-
 // Passport.config
 import { passportCall } from "../../core/middlewares/utils.js";
-import jwt from "jsonwebtoken";
 
-// Manager: contiene la logica
-import UserManager from "../../managers/userManager.js";
-const userManager = new UserManager();
+// Controller: contiene las respuestas http, lgica y conexion a DB (heredado de sus capas)
+import UserController from "../../controllers/userController.js";
+const userController = new UserController();
 
 
 // Mostrar todos los usuarios
-router.get("/", handlePolices(["PUBLIC"]), async(req,res) => {
-    try {
-        const users = await userManager.getUsers();
-        res.status(200).json(users);
+router.get("/", userController.getUsers);
 
-    } catch (error) {
-        res.status(error.statusCode || 500).json({error: error.message});
-    }
-});
 
-// Mostrar current
-router.get("/current", passportCall("jwt", {session: false}), (req,res) => {
-    
-    res.status(200).json({
-        payload:{
-            id: req.user._id,
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
-            email: req.user.email,
-            role: req.user.role
-        }
-    });
-});
+// Mostrar ruta current solo accesible para usuarios logueados
+router.get("/current", passportCall("jwt", {session: false}), userController.current);
+
 
 // Mostrar un usuario por su id
-router.get("/:id", handlePolices(["PUBLIC"]), async(req,res) => {
-    try {
-        const id = req.params.id;
-        const findUser = await userManager.getUserById(id);
-        res.status(200).json(findUser);
-
-    } catch (error) {
-        res.status(error.statusCode || 500).json({error: error.message});
-    }
-});
+router.get("/:id", userController.getUserById);
 
 
-// Llama a passport para crear un nuevo usuario y registrarlo
-router.post("/register", passportCall("register"), (req, res) => {
+// Crear un nuevo usuario y registrarlo
+router.post("/register", userController.createAndRegisterUser);
 
-    return res.status(201).json({
-        payload:{
-            message: "Usuario registrado con éxito",
-            id: req.user._id,
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
-            email: req.user.email
-        }
-    });
-});
 
 // Loguear un usuario ya registrado
-router.post("/login", passportCall("login"), (req, res) => {
+router.post("/login", userController.loginUser);
 
-    const payload = {
-            id: req.user._id,
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
-            email: req.user.email,
-            role: req.user.role
-        }
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"});
-    return res.status(200).json({
-        message: "Usuario logueado correctamente",
-        token
-    });
-});
 
 // Restaurar contraseña
-router.post("/restaurar", async(req,res) => {
-    try {
-        const {email, password} = req.body;
-        const restaured = await userManager.restaurarPassword(email, password);
-        res.status(200).json({ message: "Contraseña restaurada", payload: restaured})
+router.post("/restore", userController.restorePassword);
 
-    } catch (error) {
-        res.status(error.statusCode || 500).json({error: error.message || "No se pudo actualizar la contraseña"});
-    }
-});
 
-// Actualizar la data de un usuario
-router.put("/:id", async(req,res) => {
-    try {
-        const id = req.params.id;
-        const updateData = req.body;
-        const updatedUser = await userManager.updateUser(id,updateData);
-        res.status(200).json(updatedUser);
+// Actualizar un usuario
+router.put("/:id", userController.updateUser);
 
-    } catch (error) {
-        res.status(error.statusCode || 500).json({error: error.message});
-    }
-});
 
 // Eliminar un usuario
-router.delete("/:id", async(req,res) => {
-    try {
-        const id = req.params.id;
-        const deleteUser = await userManager.deleteUser(id);
-        res.status(200).json(deleteUser);
-        
-    } catch (error) {
-        res.status(error.statusCode || 500).json({error: error.message});
-    }
-});
+router.delete("/:id", userController.deleteUser);
 
 
 export default router;

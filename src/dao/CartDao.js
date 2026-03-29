@@ -3,21 +3,31 @@ import Cart from "../models/cartModel.js";
 class CartDao {
     constructor() {}
 
-    // Obtener carritos
+    // Obtener carritos (y mostrar su contenido)
     async getCarts() {
-        const carts = await Cart.find();
+        const carts = await Cart.find().populate("products.product");
         return carts;
     }
 
-    // Obtener un carrito por id
+    // Obtener un carrito por id (y mostrar su contenido)
     async getCartById(id) {
-        const cart = await Cart.findById(id);
+        const cart = await Cart.findById(id).populate("products.product");
         return cart;
     }
 
     // Crear nuevo carrito
     async createCart(cartData) {
         const cart = await Cart.create(cartData);
+        return cart;
+    }
+
+    // Agregar un producto al carrito
+    async addProduct(cartId, productId) {
+        const cart = await Cart.findByIdAndUpdate(
+            cartId,
+            { $push: { products: productId } },
+            { new: true }
+        );
         return cart;
     }
 

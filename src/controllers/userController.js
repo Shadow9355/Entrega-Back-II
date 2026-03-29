@@ -1,5 +1,7 @@
-import UserService from "../services/userService";
-import UserRepository from "../repository/userRepository";
+import UserService from "../services/userService.js";
+import UserRepository from "../repository/userRepository.js";
+import CartRepository from "../repository/cartRepository.js";
+import UserDTO from "../dto/UserDTO.js";
 
 // JWT
 import jwt from "jsonwebtoken";
@@ -13,13 +15,24 @@ class UserController {
     constructor() {
         this.UserService = new UserService();
         this.UserRepository = new UserRepository();
+        this.CartRepository = new CartRepository();
     }
 
     // Obtener usuarios
     getUsers = async (req, res) => {
         try {
             const users = await this.UserRepository.getUsers();
-            res.status(200).json(users);
+
+            const result = users.map(user => ({
+            id: user._id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            age: user.age,
+            email: user.email,
+            role: user.role
+            }));
+
+            res.status(200).json({payload: result});
 
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
@@ -31,7 +44,23 @@ class UserController {
         try {
             const id = req.params.id;
             const findUser = await this.UserRepository.getUserById(id);
-            res.status(200).json(findUser);
+
+            res.status(200).json({ 
+                payload: new UserDTO(findUser)
+            });
+
+        } catch (error) {
+            res.status(error.statusCode || 500).json({error: error.message});
+        }
+    }
+
+    // Acceder a una ruta protegida por JWT
+    current = async (req, res) => {
+        try {
+            res.status(200).json({
+                message: "Acceso a ruta protegida exitoso", 
+                payload: new UserDTO(req.user)
+            });
 
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
@@ -41,16 +70,16 @@ class UserController {
     // Crear nuevo usuario y registrarlo
     createAndRegisterUser = async (req, res) => {
         try {
-            const {first_name, last_name, email, age, password, cart, role} = req.body;
-            const user = await this.UserService.userCreate({first_name, last_name, email, age, password, cart, role}); 
+            const {first_name, last_name, email, age, password, role} = req.body;
+
+            // crear un carrito para el usuario
+            const cart = await this.CartRepository.createCart();
+
+            const user = await this.UserService.userCreate({first_name, last_name, email, age, password, role, cart}); 
+            
             return res.status(201).json({
-                payload:{
-                    message: "Usuario registrado con éxito",
-                    id: req.user._id,
-                    first_name: req.user.first_name,
-                    last_name: req.user.last_name,
-                    email: req.user.email
-                }
+                message: "Usuario registrado con éxito",
+                payload: new UserDTO(user)
             });
             
         }   catch (error) {
@@ -65,11 +94,11 @@ class UserController {
             const user = await this.UserService.loginUser({email, password});
             
             const payload = {
-                        id: req.user._id,
-                        first_name: req.user.first_name,
-                        last_name: req.user.last_name,
-                        email: req.user.email,
-                        role: req.user.role
+                        id: user._id,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        email: user.email,
+                        role: user.role
                     }
             
             const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"});
@@ -83,12 +112,16 @@ class UserController {
         }
     }
 
+
     // Restaurar contraseña
     restorePassword = async (req, res) => {
         try {
             const {email, password} = req.body;
             const result = await this.UserService.restorePassword(email, password);
-            res.status(200).json(result);
+
+            res.status(200).json({message: "Contraseña actualizada con éxito", 
+                payload: new UserDTO(result)
+            });
 
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
@@ -102,7 +135,9 @@ class UserController {
             const updateData = req.body;
             const updatedUser = await this.UserRepository.updateUser(id, updateData);
 
-            res.status(200).json(updatedUser);
+            res.status(200).json({message: "Usuario actualizado con exito", 
+                payload: new UserDTO(updatedUser)
+            });
 
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
@@ -114,7 +149,10 @@ class UserController {
         try {
             const id = req.params.id;
             const deleteUser = await this.UserRepository.deleteUser(id);
-            res.status(200).json(deleteUser);
+
+            res.status(200).json({message: "Usuario eliminado con exito", 
+                payload: new UserDTO(deleteUser)
+            });
             
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});

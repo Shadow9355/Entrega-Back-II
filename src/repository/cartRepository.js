@@ -20,6 +20,11 @@ class CartRepository {
         return await this.cartDao.createCart(cartData);
     }
 
+    // Agregar un producto al carrito
+    async addProduct(cartId, productId) {
+        return await this.cartDao.addProduct(cartId, productId);
+    }
+
     // Actualizar un carrito
     async updateCart(id, cartData) {
         return await this.cartDao.updateCart(id, cartData);
