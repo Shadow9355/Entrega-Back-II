@@ -14,7 +14,7 @@ class CartService {
         }
     
         const existingProduct = cart.products.find(
-            p => p.product.toString() === productId );
+            p => p.product && p.product.toString() === productId );
     
         if (existingProduct) {
             existingProduct.quantity += 1;

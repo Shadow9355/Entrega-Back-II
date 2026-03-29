@@ -112,21 +112,35 @@ class UserController {
         }
     }
 
-
-    // Restaurar contraseña
-    restorePassword = async (req, res) => {
+    // Protocolo para recuperar contraseña con mail
+    forgotPassword = async (req, res) => {
         try {
-            const {email, password} = req.body;
-            const result = await this.UserService.restorePassword(email, password);
+            const { email } = req.body;
 
-            res.status(200).json({message: "Contraseña actualizada con éxito", 
-                payload: new UserDTO(result)
-            });
+            const result = await this.UserService.forgotPassword(email);
+
+            res.status(200).json(result);
 
         } catch (error) {
-            res.status(error.statusCode || 500).json({error: error.message});
+            res.status(error.statusCode || 500).json({ error: error.message });
         }
-    }
+    };
+
+
+    // Restaurar contraseña
+    resetPassword = async (req, res) => {
+        try {
+            const { token, password } = req.body;
+
+            const result = await this.UserService.resetPassword(token, password);
+
+            res.status(200).json({ message: "Contraseña actualizada correctamente" });
+
+        } catch (error) {
+            res.status(error.statusCode || 500).json({ error: error.message });
+        }
+    };
+
 
     // Actualizar un usuario
     updateUser = async (req, res) => {
@@ -142,7 +156,7 @@ class UserController {
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
         }
-    }
+    };
 
     // Eliminar un usuario
     deleteUser = async (req, res) => {
@@ -157,7 +171,7 @@ class UserController {
         } catch (error) {
             res.status(error.statusCode || 500).json({error: error.message});
         }
-    }
+    };
 
 }
 

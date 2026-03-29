@@ -29,8 +29,12 @@ router.post("/register", userController.createAndRegisterUser);
 router.post("/login", userController.loginUser);
 
 
-// Restaurar contraseña
-router.post("/restore", userController.restorePassword);
+// Forgot Password
+router.post("/forgot-password", userController.forgotPassword);
+
+
+// Reset Password
+router.post("/reset-password", userController.resetPassword);
 
 
 // Actualizar un usuario

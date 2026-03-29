@@ -11,7 +11,7 @@ class CartDao {
 
     // Obtener un carrito por id (y mostrar su contenido)
     async getCartById(id) {
-        const cart = await Cart.findById(id).populate("products.product");
+        const cart = await Cart.findById(id);
         return cart;
     }
 

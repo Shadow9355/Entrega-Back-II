@@ -48,7 +48,7 @@ class CartController {
     addProduct = async (req, res) => {
         try {
             const cartId = req.user.cart;
-            const productId = req.params.productId;
+            const productId = req.params.id;
             const updatedCart = await this.cartService.addProduct(cartId, productId);
             
             res.json(updatedCart);

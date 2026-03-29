@@ -3,6 +3,10 @@ import CartRepository from "../repository/cartRepository.js";
 import { createHash, isValidPassword } from "../core/utils/crypto.js";
 import { CustomError } from "../core/errors/CustomError.js";
 
+// Mailer
+import jwt from "jsonwebtoken";
+import transporter from "../core/config/mailer.js";
+
 class UserService {
     constructor() {
         this.UserRepository = new UserRepository();
@@ -56,23 +60,75 @@ class UserService {
         return user;
     }
 
-    // restaurar contraseña
-    async restorePassword(email, password) {
-            // buscar el usuario por email
-            const user = await this.UserRepository.getUserByEmail(email);
-    
-            // validar que el usuario exista
-            if(!user){
-                throw new CustomError("Usuario invalido", 401);
-            }
-    
-            // hashear la contraseña nueva
-            const heashedPassword = createHash(password);
-    
-            const result = await this.UserRepository.updateUser(user._id, {password: heashedPassword});
 
-            return result;
+    // Enviar mail para restaurar contraseña
+    async forgotPassword(email) {
+
+        const user = await this.UserRepository.getUserByEmail(email);
+
+        if (!user) {
+            throw new CustomError("Usuario no encontrado", 404);
+        }
+
+        // generar token (expira en 1h)
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        const link = `http://localhost:8080/api/sessions/reset-password?token=${token}`;
+
+        await transporter.sendMail({
+            from: process.env.MAIL_USER,
+            to: user.email,
+            subject: "Recuperación de contraseña entrega Back II",
+            html: `
+                <h2>Restablecer contraseña</h2>
+                <p>Hacé click en el botón para cambiar tu contraseña:</p>
+                <a href="${link}">
+                    <button>Restablecer contraseña</button>
+                </a>
+            `
+        });
+
+        return { message: "Email enviado" };
     }
+
+    // restaurar contraseña con el token recibido por mail
+    async resetPassword(token, newPassword) {
+
+        let decoded;
+
+        
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (error) {
+            throw new CustomError("Token inválido o expirado", 401);
+        }
+        
+        const user = await this.UserRepository.getUserById(decoded.id);
+        
+        if (!user) {
+            throw new CustomError("Usuario no encontrado", 404);
+        }
+
+        // validar que no sea la misma password
+        if (isValidPassword(user.password, newPassword)) {
+            throw new CustomError("No podés usar la misma contraseña", 400);
+        }
+        
+        // hashear nueva password
+        const hashedPassword = createHash(newPassword);
+
+        const updatedUser = await this.UserRepository.updateUser(user._id, {
+            password: hashedPassword
+        });
+
+
+        return updatedUser;
+    }
+
 }
 
 export default UserService;
